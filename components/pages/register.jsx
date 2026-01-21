@@ -1,8 +1,12 @@
 import React, { useState } from "react";
 import Layout from "../common/layout.jsx";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { register as apiRegister } from "../../src/api/auth";
+import { useAuth } from "../../src/hooks/useAuth";
 
 const Register = () => {
+    const navigate = useNavigate();
+    const { setUser } = useAuth();
     const [formData, setFormData] = useState({
         fullName: '',
         email: '',
@@ -10,10 +14,37 @@ const Register = () => {
         confirmPassword: '',
         agreeToTerms: false
     });
+    const [status, setStatus] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Registration submitted:', formData);
+        setStatus('');
+        if (!formData.agreeToTerms) {
+            setStatus('You must agree to the terms.');
+            return;
+        }
+        if (formData.password !== formData.confirmPassword) {
+            setStatus('Passwords do not match.');
+            return;
+        }
+        setLoading(true);
+        try {
+            const userData = await apiRegister({
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+                password_confirmation: formData.confirmPassword,
+            });
+            setUser(userData);
+            setStatus('Registered successfully. Redirecting...');
+            setTimeout(() => navigate('/'), 500);
+        } catch (err) {
+            const message = err?.response?.data?.message || 'Registration failed';
+            setStatus(message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -88,8 +119,16 @@ const Register = () => {
                                 </label>
                             </div>
 
-                            <button type="submit" className="btn btn-primary btn-block btn-lg">Create Account</button>
+                            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+                                {loading ? 'Creating account...' : 'Create Account'}
+                            </button>
                         </form>
+
+                        {status && (
+                            <p className="text-center" style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
+                                {status}
+                            </p>
+                        )}
 
                         <div style={{ margin: '2rem 0', textAlign: 'center', position: 'relative' }}>
                             <div style={{ borderTop: '1px solid var(--border-color)', position: 'absolute', width: '100%', top: '50%' }}></div>

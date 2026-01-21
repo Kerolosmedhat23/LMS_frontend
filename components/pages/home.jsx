@@ -1,19 +1,36 @@
 import React from "react"
 import Layout from "../common/layout.jsx"
+import { useAuth } from "../../src/hooks/useAuth"
+import { Link } from "react-router-dom"
 
 const Home = () => {
+    const { user, isAuthenticated } = useAuth();
+
     return (
     <Layout>   
         {/* Hero Section */}
         <section className="hero">
             <div className="container">
                 <div className="hero-content">
-                    <h1>Transform Your Learning Journey</h1>
-                    <p>Access world-class courses, learn at your own pace, and achieve your educational goals with our comprehensive learning management system.</p>
-                    <div className="hero-actions">
-                        <button className="btn btn-primary btn-lg">Get Started</button>
-                        <button className="btn btn-outline btn-lg">Browse Courses</button>
-                    </div>
+                    {isAuthenticated ? (
+                        <>
+                            <h1>Welcome back, {user.name}! 👋</h1>
+                            <p>Continue your learning journey and explore new courses tailored to your interests.</p>
+                            <div className="hero-actions">
+                                <Link to="/account/mycourses" className="btn btn-primary btn-lg">My Courses</Link>
+                                <Link to="/courses" className="btn btn-outline btn-lg">Browse More Courses</Link>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h1>Transform Your Learning Journey</h1>
+                            <p>Access world-class courses, learn at your own pace, and achieve your educational goals with our comprehensive learning management system.</p>
+                            <div className="hero-actions">
+                                <Link to="/account/register" className="btn btn-primary btn-lg">Get Started</Link>
+                                <Link to="/courses" className="btn btn-outline btn-lg">Browse Courses</Link>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </section>

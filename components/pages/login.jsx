@@ -1,13 +1,34 @@
 import React, { useState } from "react";
 import Layout from "../common/layout.jsx";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { login as apiLogin } from "../../src/api/auth";
+import { useAuth } from "../../src/hooks/useAuth";
 
 const Login = () => {
+    const navigate = useNavigate();
+    const { setUser } = useAuth();
     const [formData, setFormData] = useState({ email: '', password: '' });
+    const [status, setStatus] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login submitted:', formData);
+        setStatus('');
+        setLoading(true);
+        try {
+            const userData = await apiLogin({
+                email: formData.email,
+                password: formData.password,
+            });
+            setUser(userData);
+            setStatus('Logged in. Redirecting...');
+            setTimeout(() => navigate('/'), 500);
+        } catch (err) {
+            const message = err?.response?.data?.message || 'Login failed';
+            setStatus(message);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -53,8 +74,16 @@ const Login = () => {
                                 <a href="#" style={{ fontSize: '0.875rem' }}>Forgot password?</a>
                             </div>
 
-                            <button type="submit" className="btn btn-primary btn-block btn-lg">Login</button>
+                            <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={loading}>
+                                {loading ? 'Logging in...' : 'Login'}
+                            </button>
                         </form>
+
+                        {status && (
+                            <p className="text-center" style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
+                                {status}
+                            </p>
+                        )}
 
                         <div style={{ margin: '2rem 0', textAlign: 'center', position: 'relative' }}>
                             <div style={{ borderTop: '1px solid var(--border-color)', position: 'absolute', width: '100%', top: '50%' }}></div>
