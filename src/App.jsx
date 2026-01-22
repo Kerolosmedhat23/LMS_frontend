@@ -10,6 +10,9 @@ import Login from '../components/pages/login.jsx'
 import MyCourses from '../components/pages/account/mycourses.jsx' 
 import WatchCourse from '../components/pages/account/watchcourse.jsx'
 import ChangePassword from '../components/pages/account/changepassword.jsx' 
+import CreateCourse from '../components/pages/courses/createcourse.jsx'
+import ManageCourses from '../components/pages/courses/managecourses.jsx'
+import Orders from '../components/pages/account/orders.jsx'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -30,6 +33,9 @@ function App() {
       <Route path="/account/checkout" element={<ProtectedRoute element={<Checkout />} />} />
       <Route path="/account/enrolledcourse" element={<ProtectedRoute element={<EnrolledCourse />} />} />
       <Route path="/account/mycourses" element={<ProtectedRoute element={<MyCourses />} />} />
+      <Route path="/account/orders" element={<ProtectedRoute element={<Orders />} />} />
+      <Route path="/account/createcourse" element={<ProtectedRoute element={<CreateCourse />} />} />
+      <Route path="/account/managecourses" element={<ProtectedRoute element={<ManageCourses />} />} />
       <Route path="/account/watchcourse" element={<ProtectedRoute element={<WatchCourse />} />} />
       <Route path="/account/changepassword" element={<ProtectedRoute element={<ChangePassword />} />} />
 

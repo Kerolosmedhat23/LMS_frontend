@@ -20,6 +20,9 @@ const Header = () => {
                         <li><Link to="/" className="nav-link active">Home</Link></li>
                         <li><Link to="/courses" className="nav-link">Courses</Link></li>
                         {isAuthenticated && <li><Link to="/account/mycourses" className="nav-link">My Courses</Link></li>}
+                        {isAuthenticated && <li><Link to="/account/orders" className="nav-link">Orders</Link></li>}
+                        {isAuthenticated && <li><Link to="/account/managecourses" className="nav-link">Manage Courses</Link></li>}
+                        {isAuthenticated && <li><Link to="/account/createcourse" className="nav-link">Create Course</Link></li>}
                         <li><Link to="/about" className="nav-link">About</Link></li>
                     </ul>
 

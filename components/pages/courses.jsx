@@ -1,21 +1,61 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Layout from "../common/layout.jsx";
 import { Link } from "react-router-dom";
 
 const Courses = () => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [courses, setCourses] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const categories = ['All', 'Development', 'Design', 'Business', 'Data Science', 'Marketing'];
-    
-    const courses = [
-        { id: 1, title: 'Complete Web Development Bootcamp', category: 'Development', price: 49.99, oldPrice: 99.99, rating: 4.8, students: 2500, image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', badge: 'Bestseller' },
-        { id: 2, title: 'UI/UX Design Masterclass', category: 'Design', price: 39.99, oldPrice: 79.99, rating: 4.9, students: 1800, image: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', badge: 'New' },
-        { id: 3, title: 'Python for Data Analysis', category: 'Data Science', price: 59.99, oldPrice: 119.99, rating: 4.7, students: 3200, image: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-        { id: 4, title: 'Digital Marketing Mastery', category: 'Marketing', price: 44.99, oldPrice: 89.99, rating: 4.6, students: 1500, image: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
-        { id: 5, title: 'React & Redux Complete Guide', category: 'Development', price: 54.99, oldPrice: 109.99, rating: 4.9, students: 2800, image: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', badge: 'Popular' },
-        { id: 6, title: 'Business Strategy Fundamentals', category: 'Business', price: 49.99, oldPrice: 99.99, rating: 4.5, students: 1200, image: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)' },
-    ];
+    useEffect(() => {
+        fetchCourses();
+        fetchCategories();
+    }, []);
+
+    const fetchCourses = async () => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/courses");
+            const data = await response.json();
+            setCourses(data);
+            setLoading(false);
+        } catch (err) {
+            setError("Failed to load courses");
+            setLoading(false);
+            console.error("Error fetching courses:", err);
+        }
+    };
+
+    const fetchCategories = async () => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/categories");
+            const data = await response.json();
+            setCategories([{ id: 'all', name: 'All' }, ...data]);
+        } catch (err) {
+            console.error("Error fetching categories:", err);
+        }
+    };
+
+    const filteredCourses = courses.filter(course => {
+        const matchCategory = selectedCategory === 'all' || course.category?.id === selectedCategory;
+        const matchSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchCategory && matchSearch;
+    });
+
+    const getGradientColor = (index) => {
+        const gradients = [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+            'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+        ];
+        return gradients[index % gradients.length];
+    };
 
     return (
         <Layout>
@@ -31,6 +71,12 @@ const Courses = () => {
 
             <section className="section">
                 <div className="container">
+                    {error && (
+                        <div className="alert alert-danger" style={{ marginBottom: '2rem' }}>
+                            {error}
+                        </div>
+                    )}
+
                     {/* Search Bar */}
                     <div className="card" style={{ marginBottom: '2rem' }}>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -51,48 +97,64 @@ const Courses = () => {
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                             {categories.map(cat => (
                                 <button 
-                                    key={cat}
-                                    className={`btn ${selectedCategory === cat.toLowerCase() ? 'btn-primary' : 'btn-outline'}`}
-                                    onClick={() => setSelectedCategory(cat.toLowerCase())}
+                                    key={cat.id || cat}
+                                    className={`btn ${selectedCategory === (cat.id || cat.toLowerCase()) ? 'btn-primary' : 'btn-outline'}`}
+                                    onClick={() => setSelectedCategory(cat.id || cat.toLowerCase())}
                                 >
-                                    {cat}
+                                    {cat.name || cat}
                                 </button>
                             ))}
                         </div>
                     </div>
 
                     {/* Courses Grid */}
-                    <div className="courses-grid">
-                        {courses.map(course => (
-                            <div key={course.id} className="course-card">
-                                <div style={{ position: 'relative' }}>
-                                    <div className="course-image" style={{ background: course.image }}></div>
-                                    {course.badge && <span className="course-badge">{course.badge}</span>}
-                                </div>
-                                <div className="course-content">
-                                    <span className="course-category">{course.category}</span>
-                                    <h3 className="course-title">{course.title}</h3>
-                                    <p className="course-description">Learn from industry experts and master the skills you need to succeed in your career.</p>
-                                    <div className="course-meta">
-                                        <div className="course-instructor">
-                                            <div className="instructor-avatar"></div>
-                                            <span>Expert</span>
-                                        </div>
-                                        <div className="course-rating">
-                                            ★ {course.rating} ({course.students})
+                    {loading ? (
+                        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                            <p>Loading courses...</p>
+                        </div>
+                    ) : filteredCourses.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+                            <p>No courses found. Try adjusting your search or category.</p>
+                        </div>
+                    ) : (
+                        <div className="courses-grid">
+                            {filteredCourses.map((course, index) => (
+                                <div key={course.id} className="course-card">
+                                    <div style={{ position: 'relative' }}>
+                                        <div 
+                                            className="course-image" 
+                                            style={{ 
+                                                background: course.thumbnail ? `url(http://127.0.0.1:8000/storage/${course.thumbnail})` : getGradientColor(index),
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center'
+                                            }}
+                                        ></div>
+                                        {course.status === 'published' && <span className="course-badge">Published</span>}
+                                    </div>
+                                    <div className="course-content">
+                                        <span className="course-category">{course.category?.name || 'Uncategorized'}</span>
+                                        <h3 className="course-title">{course.title}</h3>
+                                        <p className="course-description">{course.description?.substring(0, 100)}...</p>
+                                        <div className="course-meta">
+                                            <div className="course-instructor">
+                                                <div className="instructor-avatar"></div>
+                                                <span>{course.instructor?.name || 'Expert'}</span>
+                                            </div>
+                                            <div className="course-rating">
+                                                ⏱️ {course.duration}h
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div className="course-footer">
-                                    <div>
-                                        <span className="course-price">${course.price}</span>
-                                        <span className="course-price-old">${course.oldPrice}</span>
+                                    <div className="course-footer">
+                                        <div>
+                                            <span className="course-price">${course.price}</span>
+                                        </div>
+                                        <Link to={`/course/${course.id}`} className="btn btn-primary btn-sm">View Details</Link>
                                     </div>
-                                    <Link to={`/course/${course.id}`} className="btn btn-primary btn-sm">View Details</Link>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
         </Layout>
